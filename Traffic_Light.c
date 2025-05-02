@@ -7,6 +7,8 @@
 #include "FreeRTOSConfig.h"
 #include "task.h"
 #include <stdio.h>
+#include "Led_Matrix.h" // Inclusão da biblioteca para controlar a matriz de LEDs>
+
 
 #define I2C_PORT i2c1
 #define I2C_SDA 14
@@ -16,29 +18,21 @@
 #define led1 11
 #define led2 12
 
-void vBlinkLed1Task()
-{
-    gpio_init(led1);
-    gpio_set_dir(led1, GPIO_OUT);
-    while (true)
-    {
-        gpio_put(led1, true);
-        vTaskDelay(pdMS_TO_TICKS(250));
-        gpio_put(led1, false);
-        vTaskDelay(pdMS_TO_TICKS(1223));
-    }
-}
+// Tarefa para controlar os LEDs da matriz
+void vTrafficLightTask(void *pvParameters) {
+    const TickType_t red_delay    = pdMS_TO_TICKS(6000);
+    const TickType_t yellow_delay = pdMS_TO_TICKS(1000);
+    const TickType_t green_delay  = pdMS_TO_TICKS(6000);
 
-void vBlinkLed2Task()
-{
-    gpio_init(led2);
-    gpio_set_dir(led2, GPIO_OUT);
-    while (true)
-    {
-        gpio_put(led2, true);
-        vTaskDelay(pdMS_TO_TICKS(500));
-        gpio_put(led2, false);
-        vTaskDelay(pdMS_TO_TICKS(2224));
+    while (true) {
+        draw_traffic_light(RED); // Desenha o semáforo vermelho
+        vTaskDelay(red_delay);
+
+        draw_traffic_light(YELLOW);
+        vTaskDelay(yellow_delay);
+
+        draw_traffic_light(GREEN);
+        vTaskDelay(green_delay);
     }
 }
 
@@ -97,14 +91,16 @@ int main()
     gpio_set_irq_enabled_with_callback(botaoB, GPIO_IRQ_EDGE_FALL, true, &gpio_irq_handler);
     // Fim do trecho para modo BOOTSEL com botão B
 
+    configure_leds_matrix(); // Configura a matriz de LEDs
+
     stdio_init_all();
 
-    xTaskCreate(vBlinkLed1Task, "Blink Task Led1", configMINIMAL_STACK_SIZE,
+    xTaskCreate(vTrafficLightTask, "Traffic Light Task", configMINIMAL_STACK_SIZE,
          NULL, tskIDLE_PRIORITY, NULL);
-    xTaskCreate(vBlinkLed2Task, "Blink Task Led2", configMINIMAL_STACK_SIZE, 
-        NULL, tskIDLE_PRIORITY, NULL);
     xTaskCreate(vDisplay3Task, "Cont Task Disp3", configMINIMAL_STACK_SIZE, 
         NULL, tskIDLE_PRIORITY, NULL);
+    
     vTaskStartScheduler();
+
     panic_unsupported();
 }
