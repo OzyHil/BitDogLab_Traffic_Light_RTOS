@@ -8,7 +8,7 @@
 #include "task.h"
 #include <stdio.h>
 #include "Led_Matrix.h" // Inclusão da biblioteca para controlar a matriz de LEDs>
-
+#include "Buzzer.h" // Inclusão da biblioteca para controlar o buzzer
 
 #define I2C_PORT i2c1
 #define I2C_SDA 14
@@ -18,21 +18,71 @@
 #define led1 11
 #define led2 12
 
-// Tarefa para controlar os LEDs da matriz
-void vTrafficLightTask(void *pvParameters) {
-    const TickType_t red_delay    = pdMS_TO_TICKS(6000);
-    const TickType_t yellow_delay = pdMS_TO_TICKS(1000);
-    const TickType_t green_delay  = pdMS_TO_TICKS(6000);
+// Variável global para o estado do semáforo
+volatile semaphore_state g_current_state = RED;
+
+// // Tarefa para controlar os LEDs da matriz
+void vTrafficLightMatrixTask() {
+    const TickType_t red_delay    = pdMS_TO_TICKS(10000);
+    const TickType_t yellow_delay = pdMS_TO_TICKS(4000);
+    const TickType_t green_delay  = pdMS_TO_TICKS(10000);
 
     while (true) {
-        draw_traffic_light(RED); // Desenha o semáforo vermelho
+        draw_traffic_light(RED); // Acende a cor vermelha do semáforo
+        g_current_state = RED;
         vTaskDelay(red_delay);
 
-        draw_traffic_light(YELLOW);
+        draw_traffic_light(YELLOW); // Acende a cor amarela do semáforo
+        g_current_state = YELLOW;
         vTaskDelay(yellow_delay);
 
-        draw_traffic_light(GREEN);
+        draw_traffic_light(GREEN); // Acende a cor verde do semáforo
+        g_current_state = GREEN;
         vTaskDelay(green_delay);
+    }
+}
+
+// Tarefa para controlar o buzzer
+void vTrafficLightBuzzerTask() {
+    semaphore_state current_state;
+
+    while (true) {
+        // Lê o estado atual da variável global
+        current_state = g_current_state;
+
+        // Processa o estado e gera o som apropriado
+        switch (current_state) {
+            case RED:
+                // Tom contínuo curto (500ms ligado e 1.5s desligado) “pare”
+                set_buzzer_level(BUZZER_A, WRAP_PWM_BUZZER / 90); // Ativa o buzzer
+                vTaskDelay(pdMS_TO_TICKS(500));
+                set_buzzer_level(BUZZER_A, 0); // Desativa o buzzer
+                vTaskDelay(pdMS_TO_TICKS(1500));
+                break;
+            case YELLOW:
+                // Beep rápido intermitente “atenção”
+                for (int i = 0; i < 5; i++) { // 5 beeps
+                    set_buzzer_level(BUZZER_A, WRAP_PWM_BUZZER / 90); // Ativa o buzzer
+                    vTaskDelay(pdMS_TO_TICKS(100)); // Beep curto
+                    set_buzzer_level(BUZZER_A, 0); // Desativa o buzzer
+                    vTaskDelay(pdMS_TO_TICKS(100)); // Pausa curta
+                }
+                break;
+            case GREEN:
+                // 1 beep curto por um segundo “pode atravessar”
+                set_buzzer_level(BUZZER_A, WRAP_PWM_BUZZER / 90); // Ativa o buzzer
+                vTaskDelay(pdMS_TO_TICKS(100)); // Beep curto
+                set_buzzer_level(BUZZER_A, 0); // Desativa o buzzer
+                vTaskDelay(pdMS_TO_TICKS(900)); // Pausa para completar 1 segundo
+                break;
+            default:
+                // Erro: estado inválido
+                set_buzzer_level(BUZZER_A, 0);
+                break;
+        }
+
+        // Delay para evitar ocupar 100% do processador (ajuste conforme necessário)
+        vTaskDelay(pdMS_TO_TICKS(50));
     }
 }
 
@@ -92,10 +142,11 @@ int main()
     // Fim do trecho para modo BOOTSEL com botão B
 
     configure_leds_matrix(); // Configura a matriz de LEDs
+    configure_buzzer();      // Configura o buzzer
 
-    stdio_init_all();
-
-    xTaskCreate(vTrafficLightTask, "Traffic Light Task", configMINIMAL_STACK_SIZE,
+    xTaskCreate(vTrafficLightMatrixTask, "Traffic Light Task", configMINIMAL_STACK_SIZE,
+         NULL, tskIDLE_PRIORITY, NULL);
+    xTaskCreate(vTrafficLightBuzzerTask, "Traffic Light Task", configMINIMAL_STACK_SIZE,
          NULL, tskIDLE_PRIORITY, NULL);
     xTaskCreate(vDisplay3Task, "Cont Task Disp3", configMINIMAL_STACK_SIZE, 
         NULL, tskIDLE_PRIORITY, NULL);

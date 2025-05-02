@@ -65,6 +65,7 @@ target_link_libraries(
     FreeRTOS-Kernel 
     FreeRTOS-Kernel-Heap4
     hardware_pio
+    hardware_pwm
 )
 
 pico_generate_pio_header(
