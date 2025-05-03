@@ -5,12 +5,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include "pico/stdlib.h"    // Biblioteca principal para o Raspberry Pi Pico
-#include "hardware/pwm.h"   // Controle de PWM (Pulse Width Modulation)
-#include "hardware/pio.h"   // Programação de E/S PIO (Programmable I/O)
-#include "pio_matrix.pio.h" // Programa específico para controle da matriz de LEDs
+#include "pico/stdlib.h"     // Biblioteca principal para o Raspberry Pi Pico
+#include "hardware/pwm.h"    // Controle de PWM (Pulse Width Modulation)
+#include "hardware/pio.h"    // Programação de E/S PIO (Programmable I/O)
+#include "pio_matrix.pio.h"  // Programa específico para controle da matriz de LEDs
 #include "hardware/clocks.h" // Controle de clocks
-#include "hardware/i2c.h"   // Comunicação I2C
+#include "hardware/i2c.h"    // Comunicação I2C
+#include "pico/bootrom.h"    // Trecho para modo BOOTSEL com botão B
 
 // Função para inicializar a configuração do sistema (clocks, I/O, etc.)
 void init_system_config();
