@@ -21,6 +21,7 @@
 
 // Variável global para o estado do semáforo
 volatile semaphore_state g_current_state = RED;
+volatile bool night_mode = false; // Variável para armazenar o estado do modo noturno
 
 // // Tarefa para controlar os LEDs da matriz
 void vTrafficLightMatrixTask()
@@ -31,7 +32,7 @@ void vTrafficLightMatrixTask()
 
     while (true)
     {
-        if (night_mode)
+        if (!night_mode)
         {
             draw_traffic_light(RED); // Acende a cor vermelha do semáforo
             g_current_state = RED;
@@ -63,6 +64,20 @@ void vTrafficLightBuzzerTask()
     {
         // Lê o estado atual da variável global
         current_state = g_current_state;
+
+        // Se estiver no modo noturno, só o LED amarelo deve piscar levemente a cada 2 segundos
+        if (night_mode)
+        {
+            // Em modo noturno, o LED amarelo pisca levemente
+            if (current_state == YELLOW)
+            {
+                set_buzzer_level(BUZZER_A, WRAP_PWM_BUZZER / 90); // Buzzer baixo para piscar levemente
+                vTaskDelay(pdMS_TO_TICKS(1000)); // Espera 700ms
+                set_buzzer_level(BUZZER_A, 0); // Desativa o buzzer
+                vTaskDelay(pdMS_TO_TICKS(2000)); // Espera 2 segundos antes de verificar novamente
+            }
+            continue;
+        }
 
         // Processa o estado e gera o som apropriado
         switch (current_state)
@@ -97,11 +112,12 @@ void vTrafficLightBuzzerTask()
             break;
         }
 
-        // Delay para evitar ocupar 100% do processador (ajuste conforme necessário)
-        vTaskDelay(pdMS_TO_TICKS(50));
+        // Delay para evitar ocupar 100% do processador
+        vTaskDelay(pdMS_TO_TICKS(1));
     }
 }
 
+// Tarefa para controlar o display OLED
 void vDisplay3Task()
 {
     // I2C Initialisation. Using it at 400Khz.
@@ -140,6 +156,28 @@ void vDisplay3Task()
     }
 }
 
+// Tarefa para verificar o botão e alternar o modo noturno
+void vCheckButtonTask() {
+    bool last_state = true; // Considera botão inicialmente não pressionado
+    uint32_t last_time_button_A = 0;
+
+    while (1) {
+        bool current_state = gpio_get(BUTTON_A);
+
+        if (last_state == true && current_state == false) { // Detecta borda de descida
+            uint32_t now = get_absolute_time(); // tempo atual em ms
+
+            if ((now - last_time_button_A) >= DEBOUNCE_DELAY) {
+                last_time_button_A = now;
+                night_mode = !night_mode; // Alterna modo
+            }
+        }
+
+        last_state = current_state;
+        vTaskDelay(pdMS_TO_TICKS(10)); // só para aliviar CPU
+    }
+}
+
 int main()
 {
     configure_leds_matrix();    // Configura a matriz de LEDs
@@ -147,11 +185,13 @@ int main()
     configure_button(BUTTON_A); // Configura o botão A
     configure_button(BUTTON_B); // Configura o botão B
 
-    xTaskCreate(vTrafficLightMatrixTask, "Traffic Light Task", configMINIMAL_STACK_SIZE,
+    xTaskCreate(vTrafficLightMatrixTask, "Traffic Light Matrix Task", configMINIMAL_STACK_SIZE,
                 NULL, tskIDLE_PRIORITY, NULL);
-    xTaskCreate(vTrafficLightBuzzerTask, "Traffic Light Task", configMINIMAL_STACK_SIZE,
+    xTaskCreate(vTrafficLightBuzzerTask, "Traffic Light Buzzer Task", configMINIMAL_STACK_SIZE,
                 NULL, tskIDLE_PRIORITY, NULL);
     xTaskCreate(vDisplay3Task, "Cont Task Disp3", configMINIMAL_STACK_SIZE,
+                NULL, tskIDLE_PRIORITY, NULL);
+    xTaskCreate(vCheckButtonTask, "Check Button Task", configMINIMAL_STACK_SIZE,
                 NULL, tskIDLE_PRIORITY, NULL);
 
     vTaskStartScheduler();

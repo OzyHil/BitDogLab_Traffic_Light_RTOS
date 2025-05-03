@@ -1,9 +1,7 @@
 #ifndef SSD1306_H
 #define SSD1306_H
 
-#include <stdlib.h>
-#include "pico/stdlib.h"
-#include "hardware/i2c.h"
+#include "General.h"
 
 #define WIDTH 128
 #define HEIGHT 64

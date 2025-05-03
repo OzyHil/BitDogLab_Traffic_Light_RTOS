@@ -1,9 +1,7 @@
 #ifndef LED_MATRIX_H
 #define LED_MATRIX_H
 
-#include <stdlib.h>
-#include "pico/stdlib.h"
-#include "pio_matrix.pio.h" // Programa específico para controle da matriz de LEDs
+#include "General.h" // Programa específico para controle da matriz de LEDs
 
 #define NUM_PIXELS 25 // Total de LEDs na matriz (5x5)
 #define LED_MATRIX 7 // GPIO para controle da matriz de LEDs
