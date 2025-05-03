@@ -14,4 +14,13 @@ void configure_buzzer();
 // Função para definir o nível do buzzer (intensidade do som)
 void set_buzzer_level(uint gpio, uint16_t level);
 
+// Funções para diferentes modos de beep do buzzer
+void beep_mode_red(); // Beep longo intermitente “pare”
+
+void beep_mode_yellow(); // Beep rápido intermitente “atenção”
+
+void beep_mode_green(); // 1 beep curto por um segundo “pode atravessar”
+
+void beep_mode_night(); // Em modo noturno, bipa levemente
+
 #endif

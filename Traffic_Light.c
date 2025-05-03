@@ -61,16 +61,11 @@ void vTrafficLightBuzzerTask()
 {
     while (true)
     {
-        // Se estiver no modo noturno, só o LED amarelo deve piscar levemente a cada 2 segundos
         if (night_mode)
         {
-            // Em modo noturno, o LED amarelo pisca levemente
             if (g_current_state == YELLOW)
             {
-                set_buzzer_level(BUZZER_A, WRAP_PWM_BUZZER / 90); // Buzzer baixo para piscar levemente
-                vTaskDelay(pdMS_TO_TICKS(1000));                  // Espera 700ms
-                set_buzzer_level(BUZZER_A, 0);                    // Desativa o buzzer
-                vTaskDelay(pdMS_TO_TICKS(2000));                  // Espera 2 segundos antes de verificar novamente
+                beep_mode_night(); // Buzzer em modo noturno
             }
             continue;
         }
@@ -79,32 +74,17 @@ void vTrafficLightBuzzerTask()
         switch (g_current_state)
         {
         case RED:
-            // Tom contínuo curto (500ms ligado e 1.5s desligado) “pare”
-            set_buzzer_level(BUZZER_A, WRAP_PWM_BUZZER / 90); // Ativa o buzzer
-            vTaskDelay(pdMS_TO_TICKS(500));
-            set_buzzer_level(BUZZER_A, 0); // Desativa o buzzer
-            vTaskDelay(pdMS_TO_TICKS(1500));
+            beep_mode_red(); // Beep longo intermitente “pare”
             break;
         case YELLOW:
             // Beep rápido intermitente “atenção”
-            for (int i = 0; i < 5; i++)
-            {                                                     // 5 beeps
-                set_buzzer_level(BUZZER_A, WRAP_PWM_BUZZER / 90); // Ativa o buzzer
-                vTaskDelay(pdMS_TO_TICKS(100));                   // Beep curto
-                set_buzzer_level(BUZZER_A, 0);                    // Desativa o buzzer
-                vTaskDelay(pdMS_TO_TICKS(100));                   // Pausa curta
-            }
+            beep_mode_yellow();
             break;
         case GREEN:
-            // 1 beep curto por um segundo “pode atravessar”
-            set_buzzer_level(BUZZER_A, WRAP_PWM_BUZZER / 90); // Ativa o buzzer
-            vTaskDelay(pdMS_TO_TICKS(100));                   // Beep curto
-            set_buzzer_level(BUZZER_A, 0);                    // Desativa o buzzer
-            vTaskDelay(pdMS_TO_TICKS(900));                   // Pausa para completar 1 segundo
+            beep_mode_green(); // 1 beep curto por um segundo
             break;
         default:
-            // Erro: estado inválido
-            set_buzzer_level(BUZZER_A, 0);
+            set_buzzer_level(BUZZER_A, 0); // Erro: estado inválido
             break;
         }
 
@@ -132,7 +112,7 @@ void vDisplay3Task()
         default:
             break;
         }
-        vTaskDelay(pdMS_TO_TICKS(250));  
+        vTaskDelay(pdMS_TO_TICKS(250));
     }
 }
 
@@ -184,8 +164,8 @@ int main()
 
     xTaskCreate(vTrafficLightMatrixTask, "Traffic Light Matrix Task", configMINIMAL_STACK_SIZE,
                 NULL, tskIDLE_PRIORITY, NULL);
-    // xTaskCreate(vTrafficLightBuzzerTask, "Traffic Light Buzzer Task", configMINIMAL_STACK_SIZE,
-    //             NULL, tskIDLE_PRIORITY, NULL);
+    xTaskCreate(vTrafficLightBuzzerTask, "Traffic Light Buzzer Task", configMINIMAL_STACK_SIZE,
+                NULL, tskIDLE_PRIORITY, NULL);
     xTaskCreate(vDisplay3Task, "Cont Task Disp3", configMINIMAL_STACK_SIZE,
                 NULL, tskIDLE_PRIORITY, NULL);
     // xTaskCreate(vCheckButtonTask, "Check Button Task", configMINIMAL_STACK_SIZE,

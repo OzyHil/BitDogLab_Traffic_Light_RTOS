@@ -12,6 +12,9 @@
 #include "hardware/clocks.h" // Controle de clocks
 #include "hardware/i2c.h"    // Comunicação I2C
 #include "pico/bootrom.h"    // Trecho para modo BOOTSEL com botão B
+#include "FreeRTOS.h"
+#include "FreeRTOSConfig.h"
+#include "task.h"          // Biblioteca para tarefas do FreeRTOS
 
 // Função para inicializar a configuração do sistema (clocks, I/O, etc.)
 void init_system_config();
