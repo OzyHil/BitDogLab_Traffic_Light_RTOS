@@ -11,6 +11,7 @@
 #include "Buzzer.h"     // Inclusão da biblioteca para controlar o buzzer
 #include "Button.h"     // Inclusão da biblioteca para controlar os botões
 #include "Display.h"    // Inclusão da biblioteca para controlar o display OLED
+#include "Led.h"        // Inclusão da biblioteca para controlar os LEDs
 
 #define I2C_PORT i2c1
 #define I2C_SDA 14
@@ -21,8 +22,8 @@
 #define led2 12
 
 // Variável global para o estado do semáforo
-volatile semaphore_state g_current_state = RED;
-volatile bool night_mode = false; // Variável para armazenar o estado do modo noturno
+volatile semaphore_state g_current_state = SEMAPHORE_RED; // Inicializa o estado como vermelho
+volatile bool night_mode = false;                         // Variável para armazenar o estado do modo noturno
 
 // // Tarefa para controlar os LEDs da matriz
 void vTrafficLightMatrixTask()
@@ -35,22 +36,22 @@ void vTrafficLightMatrixTask()
     {
         if (!night_mode)
         {
-            draw_traffic_light(RED); // Acende a cor vermelha do semáforo
-            g_current_state = RED;
+            draw_traffic_light(SEMAPHORE_RED); // Acende a cor vermelha do semáforo
+            g_current_state = SEMAPHORE_RED;
             vTaskDelay(red_delay);
 
-            draw_traffic_light(YELLOW); // Acende a cor amarela do semáforo
-            g_current_state = YELLOW;
+            draw_traffic_light(SEMAPHORE_YELLOW); // Acende a cor amarela do semáforo
+            g_current_state = SEMAPHORE_YELLOW;
             vTaskDelay(yellow_delay);
 
-            draw_traffic_light(GREEN); // Acende a cor verde do semáforo
-            g_current_state = GREEN;
+            draw_traffic_light(SEMAPHORE_GREEN); // Acende a cor verde do semáforo
+            g_current_state = SEMAPHORE_GREEN;
             vTaskDelay(green_delay);
         }
         else
         {
-            draw_traffic_light(YELLOW); // Acende a cor amarela do semáforo
-            g_current_state = YELLOW;
+            draw_traffic_light(SEMAPHORE_YELLOW); // Acende a cor amarela do semáforo
+            g_current_state = SEMAPHORE_YELLOW;
             vTaskDelay(yellow_delay);
         }
     }
@@ -63,7 +64,7 @@ void vTrafficLightBuzzerTask()
     {
         if (night_mode)
         {
-            if (g_current_state == YELLOW)
+            if (g_current_state == SEMAPHORE_YELLOW)
             {
                 beep_mode_night(); // Buzzer em modo noturno
             }
@@ -73,14 +74,14 @@ void vTrafficLightBuzzerTask()
         // Processa o estado e gera o som apropriado
         switch (g_current_state)
         {
-        case RED:
+        case SEMAPHORE_RED:
             beep_mode_red(); // Beep longo intermitente “pare”
             break;
-        case YELLOW:
+        case SEMAPHORE_YELLOW:
             // Beep rápido intermitente “atenção”
             beep_mode_yellow();
             break;
-        case GREEN:
+        case SEMAPHORE_GREEN:
             beep_mode_green(); // 1 beep curto por um segundo
             break;
         default:
@@ -100,13 +101,13 @@ void vDisplay3Task()
     {
         switch (g_current_state)
         {
-        case RED:
+        case SEMAPHORE_RED:
             draw_walking_pedestrian(); // Desenha o pedestre caminhando
             break;
-        case YELLOW:
+        case SEMAPHORE_YELLOW:
             draw_standing_pedestrian(); // Desenha o pedestre parado
             break;
-        case GREEN:
+        case SEMAPHORE_GREEN:
             draw_standing_pedestrian(); // Desenha o pedestre parado
             break;
         default:
@@ -141,6 +142,25 @@ void vCheckButtonTask()
         vTaskDelay(pdMS_TO_TICKS(10)); // só para aliviar CPU
     }
 }
+
+// Função para controlar o LED do semáforo dos pedestres
+void vPedestrianTrafficLightLedTask()
+{
+    while (true)
+    {   
+        if (g_current_state == SEMAPHORE_RED)
+        {
+            set_led_color(GREEN);  // Verde para pedestres
+        }
+        else {
+            set_led_color(RED); // Vermelho para pedestres
+        }
+
+        // Espera 1 segundo antes de verificar novamente
+        vTaskDelay(pdMS_TO_TICKS(250));
+    }
+}
+
 // Trecho para modo BOOTSEL com botão B
 #include "pico/bootrom.h"
 void gpio_irq_handler(uint gpio, uint32_t events)
@@ -161,6 +181,7 @@ int main()
     configure_buzzer();      // Configura o buzzer
     // configure_button(BUTTON_A); // Configura o botão A
     configure_i2c_display(); // Configura o display I2C
+    configure_leds();        // Configura os LEDs RGB
 
     xTaskCreate(vTrafficLightMatrixTask, "Traffic Light Matrix Task", configMINIMAL_STACK_SIZE,
                 NULL, tskIDLE_PRIORITY, NULL);
@@ -168,6 +189,8 @@ int main()
                 NULL, tskIDLE_PRIORITY, NULL);
     xTaskCreate(vDisplay3Task, "Cont Task Disp3", configMINIMAL_STACK_SIZE,
                 NULL, tskIDLE_PRIORITY, NULL);
+    xTaskCreate(vPedestrianTrafficLightLedTask, "Pedestrian Traffic Light LED Task",
+                configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY, NULL);
     // xTaskCreate(vCheckButtonTask, "Check Button Task", configMINIMAL_STACK_SIZE,
     //             NULL, tskIDLE_PRIORITY, NULL);
 
