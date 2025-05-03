@@ -72,9 +72,9 @@ void vTrafficLightBuzzerTask()
             if (current_state == YELLOW)
             {
                 set_buzzer_level(BUZZER_A, WRAP_PWM_BUZZER / 90); // Buzzer baixo para piscar levemente
-                vTaskDelay(pdMS_TO_TICKS(1000)); // Espera 700ms
-                set_buzzer_level(BUZZER_A, 0); // Desativa o buzzer
-                vTaskDelay(pdMS_TO_TICKS(2000)); // Espera 2 segundos antes de verificar novamente
+                vTaskDelay(pdMS_TO_TICKS(1000));                  // Espera 700ms
+                set_buzzer_level(BUZZER_A, 0);                    // Desativa o buzzer
+                vTaskDelay(pdMS_TO_TICKS(2000));                  // Espera 2 segundos antes de verificar novamente
             }
             continue;
         }
@@ -120,54 +120,91 @@ void vTrafficLightBuzzerTask()
 // Tarefa para controlar o display OLED
 void vDisplay3Task()
 {
-    // I2C Initialisation. Using it at 400Khz.
-    i2c_init(I2C_PORT, 400 * 1000);
+    i2c_init(I2C_PORT, 400 * 1000); // Inicializa o I2C na porta I2C_PORT com 400kHz
 
-    gpio_set_function(I2C_SDA, GPIO_FUNC_I2C);                    // Set the GPIO pin function to I2C
-    gpio_set_function(I2C_SCL, GPIO_FUNC_I2C);                    // Set the GPIO pin function to I2C
-    gpio_pull_up(I2C_SDA);                                        // Pull up the data line
-    gpio_pull_up(I2C_SCL);                                        // Pull up the clock line
+    gpio_set_function(I2C_SDA, GPIO_FUNC_I2C);                    // Configura o pino SDA para I2C
+    gpio_set_function(I2C_SCL, GPIO_FUNC_I2C);                    // Configura o pino SCL para I2C
+    gpio_pull_up(I2C_SDA);                                        // Habilita o pull-up interno para SDA
+    gpio_pull_up(I2C_SCL);                                        // Habilita o pull-up interno para SCL
     ssd1306_t ssd;                                                // Inicializa a estrutura do display
     ssd1306_init(&ssd, WIDTH, HEIGHT, false, endereco, I2C_PORT); // Inicializa o display
     ssd1306_config(&ssd);                                         // Configura o display
     ssd1306_send_data(&ssd);                                      // Envia os dados para o display
+
     // Limpa o display. O display inicia com todos os pixels apagados.
     ssd1306_fill(&ssd, false);
     ssd1306_send_data(&ssd);
 
-    char str_y[5]; // Buffer para armazenar a string
-    int contador = 0;
     bool cor = true;
     while (true)
     {
-        sprintf(str_y, "%d", contador);                      // Converte em string
-        contador++;                                          // Incrementa o contador
-        ssd1306_fill(&ssd, !cor);                            // Limpa o display
-        ssd1306_rect(&ssd, 3, 3, 122, 60, cor, !cor);        // Desenha um retângulo
-        ssd1306_line(&ssd, 3, 25, 123, 25, cor);             // Desenha uma linha
-        ssd1306_line(&ssd, 3, 37, 123, 37, cor);             // Desenha uma linha
-        ssd1306_draw_string(&ssd, "CEPEDI   TIC37", 8, 6);   // Desenha uma string
-        ssd1306_draw_string(&ssd, "EMBARCATECH", 20, 16);    // Desenha uma string
-        ssd1306_draw_string(&ssd, "  FreeRTOS", 10, 28);     // Desenha uma string
-        ssd1306_draw_string(&ssd, "Contador  LEDs", 10, 41); // Desenha uma string
-        ssd1306_draw_string(&ssd, str_y, 40, 52);            // Desenha uma string
-        ssd1306_send_data(&ssd);                             // Atualiza o display
+        // ssd1306_fill(&ssd, !cor);                            // Limpa o display
+        // ssd1306_rect(&ssd, 3, 3, 122, 60, cor, !cor);        // Desenha um retângulo
+        // ssd1306_line(&ssd, 20, 37, 54, 8, cor);             // Desenha uma linha
+        // ssd1306_send_data(&ssd);                             // Atualiza o display
+
+        ssd1306_fill(&ssd, false); // Limpa o display
+        ssd1306_rect(&ssd, 2, 34, 61, 62, cor, !cor); 
+
+        // Cabeça
+        ssd1306_rect(&ssd, 8, 59, 10, 10, cor, !cor); 
+        
+        // Ombro
+        ssd1306_line(&ssd, 58, 20, 70, 20, true);
+
+        // Corpo (linha)
+        ssd1306_vline(&ssd, 58, 20, 36, true);
+        ssd1306_vline(&ssd, 70, 26, 36, true);
+
+
+        // Braço esquerdo
+        ssd1306_line(&ssd, 58, 26, 50, 32, true);
+        ssd1306_line(&ssd, 50, 32, 46, 32, true);
+        ssd1306_line(&ssd, 46, 32, 44, 31, true);
+        
+        ssd1306_line(&ssd, 58, 20, 50, 28, true);
+        ssd1306_line(&ssd, 50, 28, 46, 28, true);
+        ssd1306_line(&ssd, 46, 28, 44, 30, true);
+        
+        // Braço direito
+        ssd1306_line(&ssd, 70, 26, 80, 34, true);
+        ssd1306_line(&ssd, 70, 20, 82, 30, true);
+        ssd1306_line(&ssd, 82, 30, 83, 33, true);
+        ssd1306_line(&ssd, 81, 34, 83, 33, true);
+
+        // Perna esquerda
+        ssd1306_line(&ssd, 58, 36, 44, 58, true);
+        ssd1306_line(&ssd, 64, 40, 52, 58, true);
+        ssd1306_line(&ssd, 44, 58, 52, 58, true);
+        
+        // Perna direita
+        ssd1306_line(&ssd, 64, 40, 76, 58, true);
+        ssd1306_line(&ssd, 70, 36, 84, 58, true);
+        ssd1306_line(&ssd, 76, 58, 84, 58, true);
+
+        // Atualiza o display
+        ssd1306_send_data(&ssd);
+
         sleep_ms(735);
     }
 }
 
 // Tarefa para verificar o botão e alternar o modo noturno
-void vCheckButtonTask() {
+void vCheckButtonTask()
+{
     bool last_state = true; // Considera botão inicialmente não pressionado
     uint32_t last_time_button_A = 0;
 
-    while (1) {
+    while (1)
+    {
         bool current_state = gpio_get(BUTTON_A);
 
-        if (last_state == true && current_state == false) { // Detecta borda de descida
+        if (last_state == true && current_state == false)
+        {                                       // Detecta borda de descida
             uint32_t now = get_absolute_time(); // tempo atual em ms
 
-            if ((now - last_time_button_A) >= DEBOUNCE_DELAY) {
+            if ((now - last_time_button_A) >= DEBOUNCE_DELAY)
+            {
                 last_time_button_A = now;
                 night_mode = !night_mode; // Alterna modo
             }
@@ -177,22 +214,35 @@ void vCheckButtonTask() {
         vTaskDelay(pdMS_TO_TICKS(10)); // só para aliviar CPU
     }
 }
+// Trecho para modo BOOTSEL com botão B
+#include "pico/bootrom.h"
+void gpio_irq_handler(uint gpio, uint32_t events)
+{
+    reset_usb_boot(0, 0);
+}
 
 int main()
 {
+    // Para ser utilizado o modo BOOTSEL com botão B
+    gpio_init(BUTTON_B);
+    gpio_set_dir(BUTTON_B, GPIO_IN);
+    gpio_pull_up(BUTTON_B);
+    gpio_set_irq_enabled_with_callback(BUTTON_B, GPIO_IRQ_EDGE_FALL, true, &gpio_irq_handler);
+    // Fim do trecho para modo BOOTSEL com botão B
+
     configure_leds_matrix();    // Configura a matriz de LEDs
     configure_buzzer();         // Configura o buzzer
-    configure_button(BUTTON_A); // Configura o botão A
-    configure_button(BUTTON_B); // Configura o botão B
+    // configure_button(BUTTON_A); // Configura o botão A
+    // configure_button(BUTTON_B); // Configura o botão B
 
     xTaskCreate(vTrafficLightMatrixTask, "Traffic Light Matrix Task", configMINIMAL_STACK_SIZE,
                 NULL, tskIDLE_PRIORITY, NULL);
-    xTaskCreate(vTrafficLightBuzzerTask, "Traffic Light Buzzer Task", configMINIMAL_STACK_SIZE,
-                NULL, tskIDLE_PRIORITY, NULL);
+    // xTaskCreate(vTrafficLightBuzzerTask, "Traffic Light Buzzer Task", configMINIMAL_STACK_SIZE,
+    //             NULL, tskIDLE_PRIORITY, NULL);
     xTaskCreate(vDisplay3Task, "Cont Task Disp3", configMINIMAL_STACK_SIZE,
                 NULL, tskIDLE_PRIORITY, NULL);
-    xTaskCreate(vCheckButtonTask, "Check Button Task", configMINIMAL_STACK_SIZE,
-                NULL, tskIDLE_PRIORITY, NULL);
+    // xTaskCreate(vCheckButtonTask, "Check Button Task", configMINIMAL_STACK_SIZE,
+    //             NULL, tskIDLE_PRIORITY, NULL);
 
     vTaskStartScheduler();
 
