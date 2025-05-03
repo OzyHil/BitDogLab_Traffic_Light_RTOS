@@ -38,22 +38,26 @@ void clear_i2c_display()
 void draw_walking_pedestrian()
 {
 
-    ssd1306_fill(&ssd, false);                    // Limpa o display antes de desenhar o pedestre
-    ssd1306_rect(&ssd, 2, 34, 61, 62, cor, !cor); // Desenha um retângulo respresntando a placa
+    ssd1306_fill(&ssd, false);               // Limpa o display antes de desenhar o pedestre
+    
+    ssd1306_draw_string(&ssd, "GO", 8, 28);
+    ssd1306_draw_string(&ssd, "GO", 104, 28); // Desenha o texto "Go" no display
+
+    ssd1306_rect(&ssd, 2, 36, 54, 62, cor, !cor); // Desenha um retângulo respresntando a placa
 
     // Cabeça
     ssd1306_hline(&ssd, 62, 64, 9, cor); // topo
 
     // face esquerda
-    ssd1306_line(&ssd, 62, 9, 59, 12, cor); 
-    ssd1306_vline(&ssd, 59, 12, 15, cor); 
+    ssd1306_line(&ssd, 62, 9, 59, 12, cor);
+    ssd1306_vline(&ssd, 59, 12, 15, cor);
     ssd1306_line(&ssd, 59, 15, 62, 18, cor);
 
     // face direita
-    ssd1306_line(&ssd, 65, 9, 67, 12, cor); 
-    ssd1306_vline(&ssd, 67, 12, 15, cor); 
-    ssd1306_line(&ssd, 67, 15, 65, 18, cor); 
-    
+    ssd1306_line(&ssd, 65, 9, 67, 12, cor);
+    ssd1306_vline(&ssd, 67, 12, 15, cor);
+    ssd1306_line(&ssd, 67, 15, 65, 18, cor);
+
     ssd1306_hline(&ssd, 62, 64, 18, cor); // queixo
 
     // Ombro
@@ -81,16 +85,15 @@ void draw_walking_pedestrian()
     // Perna esquerda
     ssd1306_line(&ssd, 58, 36, 44, 54, true);
     ssd1306_line(&ssd, 64, 40, 50, 58, true);
-    
-    ssd1306_line(&ssd, 44, 55, 45, 58, true); 
+
+    ssd1306_line(&ssd, 44, 55, 45, 58, true);
     ssd1306_hline(&ssd, 46, 49, 58, true); // pé
-    
 
     // Perna direita
     ssd1306_line(&ssd, 64, 40, 76, 58, true);
     ssd1306_line(&ssd, 70, 36, 82, 54, true);
 
-    ssd1306_line(&ssd, 82, 55, 80, 58, true); 
+    ssd1306_line(&ssd, 82, 55, 80, 58, true);
     ssd1306_hline(&ssd, 77, 79, 58, true); // pé
 
     // Atualiza o display
@@ -99,23 +102,28 @@ void draw_walking_pedestrian()
 
 void draw_standing_pedestrian()
 {
-    
-    ssd1306_fill(&ssd, false);                    // Limpa o display antes de desenhar o pedestre
-    ssd1306_rect(&ssd, 2, 34, 61, 62, cor, !cor); // Desenha um retângulo respresntando a placa
+
+    ssd1306_fill(&ssd, false); // Limpa o display antes de desenhar o pedestre
+
+  
+    ssd1306_draw_string(&ssd, "STOP", 1, 28); // Desenha o texto "STOP" no display
+    ssd1306_draw_string(&ssd, "STOP", 94, 28);
+
+    ssd1306_rect(&ssd, 2, 36, 54, 62, cor, !cor); // Desenha um retângulo respresntando a placa
 
     // Cabeça
     ssd1306_hline(&ssd, 62, 66, 9, cor); // topo
 
     // face esquerda
-    ssd1306_line(&ssd, 62, 9, 59, 12, cor); 
-    ssd1306_vline(&ssd, 59, 12, 15, cor); 
+    ssd1306_line(&ssd, 62, 9, 59, 12, cor);
+    ssd1306_vline(&ssd, 59, 12, 15, cor);
     ssd1306_line(&ssd, 59, 15, 62, 18, cor);
 
     // face direita
-    ssd1306_line(&ssd, 66, 9, 69, 12, cor); 
-    ssd1306_vline(&ssd, 69, 12, 15, cor); 
-    ssd1306_line(&ssd, 69, 15, 66, 18, cor); 
-    
+    ssd1306_line(&ssd, 66, 9, 69, 12, cor);
+    ssd1306_vline(&ssd, 69, 12, 15, cor);
+    ssd1306_line(&ssd, 69, 15, 66, 18, cor);
+
     ssd1306_hline(&ssd, 62, 66, 18, cor); // queixo
 
     // Ombro
@@ -143,16 +151,16 @@ void draw_standing_pedestrian()
     ssd1306_line(&ssd, 58, 36, 52, 54, true); // fora
     ssd1306_line(&ssd, 64, 40, 60, 54, true); // dentro
 
-    ssd1306_line(&ssd, 52, 55, 54, 58, true); 
-    ssd1306_line(&ssd, 60, 55, 58, 58, true); 
+    ssd1306_line(&ssd, 52, 55, 54, 58, true);
+    ssd1306_line(&ssd, 60, 55, 58, 58, true);
 
     ssd1306_hline(&ssd, 55, 57, 58, true); // pé
 
     // Perna direita
     ssd1306_line(&ssd, 64, 40, 68, 54, true); // dentro
     ssd1306_line(&ssd, 70, 36, 76, 54, true); // fora
-    
-    ssd1306_line(&ssd, 68, 55, 70, 58, true); 
+
+    ssd1306_line(&ssd, 68, 55, 70, 58, true);
     ssd1306_line(&ssd, 76, 55, 74, 58, true);
 
     ssd1306_hline(&ssd, 71, 73, 58, true); // pé

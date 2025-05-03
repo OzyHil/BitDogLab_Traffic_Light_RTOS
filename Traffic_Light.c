@@ -191,8 +191,8 @@ int main()
                 NULL, tskIDLE_PRIORITY, NULL);
     xTaskCreate(vPedestrianTrafficLightLedTask, "Pedestrian Traffic Light LED Task",
                 configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY, NULL);
-    // xTaskCreate(vCheckButtonTask, "Check Button Task", configMINIMAL_STACK_SIZE,
-    //             NULL, tskIDLE_PRIORITY, NULL);
+    xTaskCreate(vCheckButtonTask, "Check Button Task", configMINIMAL_STACK_SIZE,
+                NULL, tskIDLE_PRIORITY, NULL);
 
     vTaskStartScheduler();
 
