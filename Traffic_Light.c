@@ -39,11 +39,15 @@ void vTrafficLightMatrixTask()
             draw_traffic_light(SEMAPHORE_RED); // Acende a cor vermelha do semáforo
             g_current_state = SEMAPHORE_RED;
             vTaskDelay(red_delay);
-
+        }
+        if (!night_mode)
+        {
             draw_traffic_light(SEMAPHORE_YELLOW); // Acende a cor amarela do semáforo
             g_current_state = SEMAPHORE_YELLOW;
-            vTaskDelay(yellow_delay);
-
+            vTaskDelay(green_delay);
+        }
+        if (!night_mode)
+        {
             draw_traffic_light(SEMAPHORE_GREEN); // Acende a cor verde do semáforo
             g_current_state = SEMAPHORE_GREEN;
             vTaskDelay(green_delay);
@@ -99,20 +103,28 @@ void vDisplay3Task()
 {
     while (true)
     {
-        switch (g_current_state)
+        if (!night_mode)
         {
-        case SEMAPHORE_RED:
-            draw_walking_pedestrian(); // Desenha o pedestre caminhando
-            break;
-        case SEMAPHORE_YELLOW:
-            draw_standing_pedestrian(); // Desenha o pedestre parado
-            break;
-        case SEMAPHORE_GREEN:
-            draw_standing_pedestrian(); // Desenha o pedestre parado
-            break;
-        default:
-            break;
+            switch (g_current_state)
+            {
+            case SEMAPHORE_RED:
+                draw_walking_pedestrian(); // Desenha o pedestre caminhando
+                break;
+            case SEMAPHORE_YELLOW:
+                draw_standing_pedestrian(); // Desenha o pedestre parado
+                break;
+            case SEMAPHORE_GREEN:
+                draw_standing_pedestrian(); // Desenha o pedestre parado
+                break;
+            default:
+                break;
+            }
         }
+        else
+        {
+            draw_walking_pedestrian(); // Desenha o pedestre caminhando
+        }
+
         vTaskDelay(pdMS_TO_TICKS(250));
     }
 }
@@ -135,6 +147,7 @@ void vCheckButtonTask()
             {
                 last_time_button_A = now;
                 night_mode = !night_mode; // Alterna modo
+                printf("Modo noturno: %s\n", night_mode ? "Ativado" : "Desativado");
             }
         }
 
@@ -147,13 +160,21 @@ void vCheckButtonTask()
 void vPedestrianTrafficLightLedTask()
 {
     while (true)
-    {   
-        if (g_current_state == SEMAPHORE_RED)
+    {
+        if (!night_mode)
         {
-            set_led_color(GREEN);  // Verde para pedestres
+            if (g_current_state == SEMAPHORE_RED)
+            {
+                set_led_color(GREEN); // Verde para pedestres
+            }
+            else
+            {
+                set_led_color(RED); // Vermelho para pedestres
+            }
         }
-        else {
-            set_led_color(RED); // Vermelho para pedestres
+        else
+        {
+            set_led_color(GREEN); // Verde para pedestres
         }
 
         // Espera 1 segundo antes de verificar novamente
@@ -177,11 +198,13 @@ int main()
     gpio_set_irq_enabled_with_callback(BUTTON_B, GPIO_IRQ_EDGE_FALL, true, &gpio_irq_handler);
     // Fim do trecho para modo BOOTSEL com botão B
 
-    configure_leds_matrix(); // Configura a matriz de LEDs
-    configure_buzzer();      // Configura o buzzer
-    // configure_button(BUTTON_A); // Configura o botão A
-    configure_i2c_display(); // Configura o display I2C
-    configure_leds();        // Configura os LEDs RGB
+    stdio_init_all(); // Inicializa a comunicação serial
+
+    configure_leds_matrix();    // Configura a matriz de LEDs
+    configure_buzzer();         // Configura o buzzer
+    configure_button(BUTTON_A); // Configura o botão A
+    configure_i2c_display();    // Configura o display I2C
+    configure_leds();           // Configura os LEDs RGB
 
     xTaskCreate(vTrafficLightMatrixTask, "Traffic Light Matrix Task", configMINIMAL_STACK_SIZE,
                 NULL, tskIDLE_PRIORITY, NULL);
