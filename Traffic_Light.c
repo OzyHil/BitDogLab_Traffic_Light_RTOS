@@ -1,62 +1,49 @@
-#include "pico/stdlib.h"
-#include "hardware/gpio.h"
-#include "hardware/i2c.h"
-#include "ssd1306.h"
-#include "font.h"
-#include "FreeRTOS.h"
-#include "FreeRTOSConfig.h"
-#include "task.h"
-#include <stdio.h>
+#include "General.h"    // Inclusão da biblioteca geral com definições e funções comuns
 #include "Led_Matrix.h" // Inclusão da biblioteca para controlar a matriz de LEDs>
 #include "Buzzer.h"     // Inclusão da biblioteca para controlar o buzzer
 #include "Button.h"     // Inclusão da biblioteca para controlar os botões
 #include "Display.h"    // Inclusão da biblioteca para controlar o display OLED
 #include "Led.h"        // Inclusão da biblioteca para controlar os LEDs
 
-#define I2C_PORT i2c1
-#define I2C_SDA 14
-#define I2C_SCL 15
-#define endereco 0x3C
-
-#define led1 11
-#define led2 12
-
 // Variável global para o estado do semáforo
-volatile semaphore_state g_current_state = SEMAPHORE_RED; // Inicializa o estado como vermelho
+volatile semaphore_state g_current_state = SEMAPHORE_RED; // Inicializa o estado do semáforo de veículos como vermelho
 volatile bool night_mode = false;                         // Variável para armazenar o estado do modo noturno
 
 // // Tarefa para controlar os LEDs da matriz
 void vTrafficLightMatrixTask()
 {
-    const TickType_t red_delay = pdMS_TO_TICKS(10000);
-    const TickType_t yellow_delay = pdMS_TO_TICKS(4000);
-    const TickType_t green_delay = pdMS_TO_TICKS(10000);
+    const TickType_t check_interval = pdMS_TO_TICKS(1000); // 100 ms
+    const int red_ticks = 10;                              // Número de ticks para o vermelho
+    const int yellow_ticks = 4;                            // Número de ticks para o amarelo
+    const int green_ticks = 10;                            // Número de ticks para o verde
 
     while (true)
     {
+        // Verificas se o modo noturno não está ativado
         if (!night_mode)
         {
-            draw_traffic_light(SEMAPHORE_RED); // Acende a cor vermelha do semáforo
-            g_current_state = SEMAPHORE_RED;
-            vTaskDelay(red_delay);
-        }
-        if (!night_mode)
-        {
-            draw_traffic_light(SEMAPHORE_YELLOW); // Acende a cor amarela do semáforo
+            draw_traffic_light(SEMAPHORE_RED); // Desenha o semáforo vermelho
+            g_current_state = SEMAPHORE_RED;   // Atualiza o estado atual do semafóro de veiculos
+
+            // Aguarda o tempo total do sinal vermelho (10s), mas verifica a cada 100 ms se o modo noturno foi ativado para interromper imediatamente, se necessário
+            for (int i = 0; i < red_ticks && !night_mode; i++)
+                vTaskDelay(check_interval);
+
+            draw_traffic_light(SEMAPHORE_YELLOW);
             g_current_state = SEMAPHORE_YELLOW;
-            vTaskDelay(green_delay);
-        }
-        if (!night_mode)
-        {
-            draw_traffic_light(SEMAPHORE_GREEN); // Acende a cor verde do semáforo
+            for (int i = 0; i < yellow_ticks && !night_mode; i++)
+                vTaskDelay(check_interval);
+
+            draw_traffic_light(SEMAPHORE_GREEN);
             g_current_state = SEMAPHORE_GREEN;
-            vTaskDelay(green_delay);
+            for (int i = 0; i < green_ticks && !night_mode; i++)
+                vTaskDelay(check_interval);
         }
-        else
+        else if (night_mode)
         {
-            draw_traffic_light(SEMAPHORE_YELLOW); // Acende a cor amarela do semáforo
+            draw_traffic_light(SEMAPHORE_YELLOW);
             g_current_state = SEMAPHORE_YELLOW;
-            vTaskDelay(yellow_delay);
+            vTaskDelay(pdMS_TO_TICKS(100)); // Espera 100 ms
         }
     }
 }
@@ -68,25 +55,25 @@ void vTrafficLightBuzzerTask()
     {
         if (night_mode)
         {
-            if (g_current_state == SEMAPHORE_YELLOW)
+
+            if (g_current_state == SEMAPHORE_YELLOW) // Verifica se o semafóro está amarelo
             {
-                beep_mode_night(); // Buzzer em modo noturno
+                beep_mode_night(); // Buzzer em modo noturno. 1s ligado e 2s desligado
             }
             continue;
         }
 
-        // Processa o estado e gera o som apropriado
+        // Processa o estado do semáforo e gera o som apropriado
         switch (g_current_state)
         {
         case SEMAPHORE_RED:
-            beep_mode_red(); // Beep longo intermitente “pare”
+            beep_mode_red(); // Beep longo intermitente “pare”. 0,5s ligado e 1,5s desligado
             break;
         case SEMAPHORE_YELLOW:
-            // Beep rápido intermitente “atenção”
-            beep_mode_yellow();
+            beep_mode_yellow(); // Beep rápido intermitente “atenção”. 0,1s ligado e 0,1s desligado
             break;
         case SEMAPHORE_GREEN:
-            beep_mode_green(); // 1 beep curto por um segundo
+            beep_mode_green(); // 1 beep curto por um segundo. “pode atravessar”
             break;
         default:
             set_buzzer_level(BUZZER_A, 0); // Erro: estado inválido
@@ -122,36 +109,35 @@ void vDisplay3Task()
         }
         else
         {
-            draw_walking_pedestrian(); // Desenha o pedestre caminhando
+            draw_walking_pedestrian();
         }
 
-        vTaskDelay(pdMS_TO_TICKS(250));
+        vTaskDelay(pdMS_TO_TICKS(100));
     }
 }
 
 // Tarefa para verificar o botão e alternar o modo noturno
 void vCheckButtonTask()
 {
-    bool last_state = true; // Considera botão inicialmente não pressionado
-    uint32_t last_time_button_A = 0;
+    bool last_state = true;          // Considera botão inicialmente não pressionado
+    uint32_t last_time_button_A = 0; // Tempo do último pressionamento
 
     while (1)
     {
-        bool current_state = gpio_get(BUTTON_A);
+        bool current_state = gpio_get(BUTTON_A); // Lê o estado atual do botão A
 
         if (last_state == true && current_state == false)
-        {                                       // Detecta borda de descida
+        {
             uint32_t now = get_absolute_time(); // tempo atual em ms
 
-            if ((now - last_time_button_A) >= DEBOUNCE_DELAY)
+            if ((now - last_time_button_A) >= DEBOUNCE_DELAY) // Verifica se o tempo de debounce foi atingido
             {
-                last_time_button_A = now;
-                night_mode = !night_mode; // Alterna modo
-                printf("Modo noturno: %s\n", night_mode ? "Ativado" : "Desativado");
+                last_time_button_A = now; // Atualiza o tempo do último pressionamento
+                night_mode = !night_mode; // Alterna o modo noturno
             }
         }
 
-        last_state = current_state;
+        last_state = current_state;    // Atualiza o estado anterior do botão
         vTaskDelay(pdMS_TO_TICKS(10)); // só para aliviar CPU
     }
 }
@@ -178,34 +164,19 @@ void vPedestrianTrafficLightLedTask()
         }
 
         // Espera 1 segundo antes de verificar novamente
-        vTaskDelay(pdMS_TO_TICKS(250));
+        vTaskDelay(pdMS_TO_TICKS(100));
     }
-}
-
-// Trecho para modo BOOTSEL com botão B
-#include "pico/bootrom.h"
-void gpio_irq_handler(uint gpio, uint32_t events)
-{
-    reset_usb_boot(0, 0);
 }
 
 int main()
 {
-    // Para ser utilizado o modo BOOTSEL com botão B
-    gpio_init(BUTTON_B);
-    gpio_set_dir(BUTTON_B, GPIO_IN);
-    gpio_pull_up(BUTTON_B);
-    gpio_set_irq_enabled_with_callback(BUTTON_B, GPIO_IRQ_EDGE_FALL, true, &gpio_irq_handler);
-    // Fim do trecho para modo BOOTSEL com botão B
-
-    stdio_init_all(); // Inicializa a comunicação serial
-
     configure_leds_matrix();    // Configura a matriz de LEDs
     configure_buzzer();         // Configura o buzzer
     configure_button(BUTTON_A); // Configura o botão A
     configure_i2c_display();    // Configura o display I2C
     configure_leds();           // Configura os LEDs RGB
 
+    // Cria as tarefas do FreeRTOS
     xTaskCreate(vTrafficLightMatrixTask, "Traffic Light Matrix Task", configMINIMAL_STACK_SIZE,
                 NULL, tskIDLE_PRIORITY, NULL);
     xTaskCreate(vTrafficLightBuzzerTask, "Traffic Light Buzzer Task", configMINIMAL_STACK_SIZE,
@@ -217,7 +188,7 @@ int main()
     xTaskCreate(vCheckButtonTask, "Check Button Task", configMINIMAL_STACK_SIZE,
                 NULL, tskIDLE_PRIORITY, NULL);
 
-    vTaskStartScheduler();
+    vTaskStartScheduler(); // Inicia o agendador do FreeRTOS
 
-    panic_unsupported();
+    panic_unsupported(); // Se o agendador falhar, entra em um loop de erro
 }

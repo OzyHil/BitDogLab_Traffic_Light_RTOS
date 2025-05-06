@@ -67,20 +67,19 @@ void draw_traffic_light(uint8_t color_code)
 {
   for (int8_t i = 0; i < NUM_PIXELS; i++)
   {
-    uint8_t led_index = matrix[i];
     uint32_t color_to_send;
 
-    if (led_index == 0)
-    {                                              // Apaga onde tiver 0 na matriz
-      color_to_send = rgb_matrix(DIGIT_COLORS[0]); // Preto
+    if (matrix[i] == 0)
+    {                                              
+      color_to_send = rgb_matrix(DIGIT_COLORS[0]); // Cor apagada
     }
-    else if (led_index == (color_code - 3))
-    {                                                       // Checa se a cor deve acender
+    else if (matrix[i] == (color_code - 3))
+    {                                                       
       color_to_send = rgb_matrix(DIGIT_COLORS[color_code]); // Cor acesa
     }
     else
     {
-      color_to_send = rgb_matrix(DIGIT_COLORS[led_index]); // Cor apagada
+      color_to_send = rgb_matrix(DIGIT_COLORS[matrix[i]]); // Cor apagada
     }
 
     pio_sm_put_blocking(pio.ref, pio.state_machine, color_to_send);

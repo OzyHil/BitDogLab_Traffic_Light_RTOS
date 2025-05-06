@@ -2,9 +2,10 @@
 #define GENERAL_H
 
 // Inclusão das bibliotecas padrão e específicas do hardware
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
+#include <stdio.h> // Biblioteca padrão para entrada/saída
+#include <stdlib.h> // Biblioteca padrão para alocação de memória e conversões
+#include <stdint.h> // Biblioteca padrão para tipos inteiros
+#include "hardware/gpio.h" // Controle de GPIO (General Purpose Input/Output)
 #include "pico/stdlib.h"     // Biblioteca principal para o Raspberry Pi Pico
 #include "hardware/pwm.h"    // Controle de PWM (Pulse Width Modulation)
 #include "hardware/pio.h"    // Programação de E/S PIO (Programmable I/O)

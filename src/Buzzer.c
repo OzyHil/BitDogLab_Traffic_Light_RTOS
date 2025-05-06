@@ -20,9 +20,9 @@ void set_buzzer_level(uint gpio, uint16_t level)
 // Função para ativar o buzzer em modo de alerta (beep) vermelho
 void beep_mode_red()
 { 
-    set_buzzer_level(BUZZER_A, WRAP_PWM_BUZZER / 90);
-    vTaskDelay(pdMS_TO_TICKS(500));
-    set_buzzer_level(BUZZER_A, 0);
+    set_buzzer_level(BUZZER_A, WRAP_PWM_BUZZER / 90); // Ativa o buzzer com intensidade de 90 vezes menor que o máximo
+    vTaskDelay(pdMS_TO_TICKS(500)); // Espera 500 ms
+    set_buzzer_level(BUZZER_A, 0); // Desativa o buzzer
     vTaskDelay(pdMS_TO_TICKS(1500));
 }
 
