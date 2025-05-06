@@ -12,10 +12,10 @@ volatile bool night_mode = false;                         // Variável para arma
 // // Tarefa para controlar os LEDs da matriz
 void vTrafficLightMatrixTask()
 {
-    const TickType_t check_interval = pdMS_TO_TICKS(1000); // 100 ms
-    const int red_ticks = 10;                              // Número de ticks para o vermelho
-    const int yellow_ticks = 4;                            // Número de ticks para o amarelo
-    const int green_ticks = 10;                            // Número de ticks para o verde
+    const TickType_t check_interval = pdMS_TO_TICKS(500); // 500ms de intervalo para verificar o estado do semáforo
+    const int red_ticks = 20;                             // Número de ticks para o vermelho
+    const int yellow_ticks = 8;                           // Número de ticks para o amarelo
+    const int green_ticks = 20;                           // Número de ticks para o verde
 
     while (true)
     {
@@ -27,7 +27,7 @@ void vTrafficLightMatrixTask()
 
             // Aguarda o tempo total do sinal vermelho (10s), mas verifica a cada 100 ms se o modo noturno foi ativado para interromper imediatamente, se necessário
             for (int i = 0; i < red_ticks && !night_mode; i++)
-                vTaskDelay(check_interval);
+                vTaskDelay(check_interval); // Espera 1s
 
             draw_traffic_light(SEMAPHORE_YELLOW);
             g_current_state = SEMAPHORE_YELLOW;
@@ -43,7 +43,7 @@ void vTrafficLightMatrixTask()
         {
             draw_traffic_light(SEMAPHORE_YELLOW);
             g_current_state = SEMAPHORE_YELLOW;
-            vTaskDelay(pdMS_TO_TICKS(100)); // Espera 100 ms
+            vTaskDelay(pdMS_TO_TICKS(100));
         }
     }
 }
@@ -80,8 +80,7 @@ void vTrafficLightBuzzerTask()
             break;
         }
 
-        // Delay para evitar ocupar 100% do processador
-        vTaskDelay(pdMS_TO_TICKS(1));
+        vTaskDelay(pdMS_TO_TICKS(10)); // Delay para evitar ocupar 100% do processador
     }
 }
 
@@ -138,7 +137,7 @@ void vCheckButtonTask()
         }
 
         last_state = current_state;    // Atualiza o estado anterior do botão
-        vTaskDelay(pdMS_TO_TICKS(10)); // só para aliviar CPU
+        vTaskDelay(pdMS_TO_TICKS(10));
     }
 }
 
@@ -163,7 +162,6 @@ void vPedestrianTrafficLightLedTask()
             set_led_color(GREEN); // Verde para pedestres
         }
 
-        // Espera 1 segundo antes de verificar novamente
         vTaskDelay(pdMS_TO_TICKS(100));
     }
 }
