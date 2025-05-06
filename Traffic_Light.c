@@ -85,7 +85,7 @@ void vTrafficLightBuzzerTask()
 }
 
 // Tarefa para controlar o display OLED
-void vDisplay3Task()
+void vPedestrianDisplayTask()
 {
     while (true)
     {
@@ -179,7 +179,7 @@ int main()
                 NULL, tskIDLE_PRIORITY, NULL);
     xTaskCreate(vTrafficLightBuzzerTask, "Traffic Light Buzzer Task", configMINIMAL_STACK_SIZE,
                 NULL, tskIDLE_PRIORITY, NULL);
-    xTaskCreate(vDisplay3Task, "Cont Task Disp3", configMINIMAL_STACK_SIZE,
+    xTaskCreate(vPedestrianDisplayTask, "Pedestrian Display Task", configMINIMAL_STACK_SIZE,
                 NULL, tskIDLE_PRIORITY, NULL);
     xTaskCreate(vPedestrianTrafficLightLedTask, "Pedestrian Traffic Light LED Task",
                 configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY, NULL);
