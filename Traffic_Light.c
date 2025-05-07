@@ -25,7 +25,7 @@ void vTrafficLightMatrixTask()
             draw_traffic_light(SEMAPHORE_RED); // Desenha o semáforo vermelho
             g_current_state = SEMAPHORE_RED;   // Atualiza o estado atual do semafóro de veiculos
 
-            // Aguarda o tempo total do sinal vermelho (10s), mas verifica a cada 100 ms se o modo noturno foi ativado para interromper imediatamente, se necessário
+            // Aguarda o tempo total do sinal vermelho (10s), mas verifica a cada 500 ms se o modo noturno foi ativado para interromper imediatamente, se necessário
             for (int i = 0; i < red_ticks && !night_mode; i++)
                 vTaskDelay(check_interval); // Espera 500ms
 
