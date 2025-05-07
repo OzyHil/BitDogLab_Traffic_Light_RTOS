@@ -3,8 +3,8 @@
 // Definições de cores utilizando níveis PWM para cada canal RGB
 const led_color DARK = {.red = 0, .green = 0, .blue = 0};       // Cor "apagado"
 const led_color GREEN = {.red = 0, .green = 72, .blue = 0};     // Verde
-const led_color YELLOW = {.red = 108, .green = 54, .blue = 0};  // Amarelo
-const led_color RED = {.red = 108, .green = 0, .blue = 0};      // Vermelho
+const led_color YELLOW = {.red = 178, .green = 89, .blue = 0};  // Amarelo
+const led_color RED = {.red = 178, .green = 0, .blue = 0};      // Vermelho
 const led_color RED_DIM = {.red = 2, .green = 0, .blue = 0};    // Vermelho com brilho reduzido
 const led_color YELLOW_DIM = {.red = 2, .green = 1, .blue = 0}; // Amarelo com brilho reduzido
 const led_color GREEN_DIM = {.red = 0, .green = 2, .blue = 0};  // Verde com brilho reduzido

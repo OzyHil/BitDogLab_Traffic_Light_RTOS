@@ -27,7 +27,7 @@ void vTrafficLightMatrixTask()
 
             // Aguarda o tempo total do sinal vermelho (10s), mas verifica a cada 100 ms se o modo noturno foi ativado para interromper imediatamente, se necessário
             for (int i = 0; i < red_ticks && !night_mode; i++)
-                vTaskDelay(check_interval); // Espera 1s
+                vTaskDelay(check_interval); // Espera 500ms
 
             draw_traffic_light(SEMAPHORE_YELLOW);
             g_current_state = SEMAPHORE_YELLOW;
